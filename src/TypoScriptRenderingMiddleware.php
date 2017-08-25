@@ -34,7 +34,10 @@ class TypoScriptRenderingMiddleware
 
         /* Provide content element context. e.g. record='tt_content_135', page='78' */
         'record' => null,
-        'page' => null,
+        /* TODO: We need a page id for cHash calculation.
+         * Implement a non-cHash based way to authorize our request
+         * for helhum/typoscript-rendering, then drop the default 'page'=>'1' setting */
+        'page' => '1',
 
         /* 'path' is only required when using custom plugin typoscript paths */
         'path' => null,
