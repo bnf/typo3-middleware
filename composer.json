@@ -1,0 +1,25 @@
+{
+    "name": "bnf/typo3-middleware",
+    "description": "PSR-7/Slim compatible middleware for TYPO3",
+    "keywords": [
+        "TYPO3"
+    ],
+    "authors": [
+        {
+            "name": "Benjamin Franzke",
+            "email": "benjaminfranzke@gmail.com"
+        }
+    ],
+    "license": "GPL-2.0+",
+    "require": {
+        "psr/http-message": "^1.0",
+        "typo3/cms-core": "^8.7",
+        "typo3/cms-frontend": "^8.7",
+        "typo3/cms-extbase": "^8.7"
+    },
+    "autoload": {
+        "psr-4": {
+            "Bnf\\Typo3Middleware\\": "src"
+        }
+    }
+}

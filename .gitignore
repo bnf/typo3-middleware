@@ -1,0 +1,8 @@
+/.build/
+/composer.lock
+
+/clover.xml
+/coveralls-upload.json
+
+/*.zip
+/Resources/Private/PHP
