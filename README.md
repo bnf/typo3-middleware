@@ -1,5 +1,53 @@
 # TYPO3 Middleware
 
+## ExtbaseMiddleware
+
+Middleware that prepares an extbase environment – by design without `$GLOBALS['TSFE']`.
+If you need `$GLOBALS['TSFE']` have a look at the `TypoScriptRenderingMiddleware`.
+
+```sh
+composer require bnf/typo3-middleware bnf/slim-typo3
+```
+
+ext_localconf.php:
+
+```php
+\TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\Bnf\SlimTypo3\AppRegistry::class)
+    ->push(function($app) {
+        $pimple = $app->getContainer()->get('pimple');
+
+        $pimple['objectManager'] = function ($c) {
+            return \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\Object\ObjectManager::class);
+        };
+        $pimple['whateverRepository'] = function ($c) {
+            return $c['objectManager']->get(\Vendor\Extension\Domain\Repository\WhateverRepository::class);
+        };
+        $pimple['exportService'] = function ($c) {
+            return $c['objectManager']->get(\Vendor\Extension\Service\ExportService::class);
+        };
+
+        $app->get('/export-whatever[/]', function ($request, $response) {
+            $objects = $this->get('whateverRepository')->findAll();
+            $xml = $this->get('exportService')->whateverToXml($objects);
+            $response->getBody()->write($xml->saveXML());
+
+            return $response;
+        })->add(new \Bnf\Typo3Middleware\ExtbaseMiddleware([
+            'persistence' => [
+                'storagePid' => 78,
+		/* TypoScript is not evaluated (by design), you need to provide _all_
+                 * required persistence configuration here. Include stuff here that you
+                 * or your dependencies write into config.extbase.persistence */
+                //\Vendor\Whathever\Domain\Model\Whatever::class => [ 'mapping' => [ 'tableName' => 'custom_table' ] ],
+            ],
+            /* You can provide plugin context here (will be used in the mocked UriBuilder) */
+            //'extensionName' => 'Whatever',
+            //'pluginName' => 'Pi1',
+            //'vendorName' => 'Vendor',
+        ]));
+```
+
+
 ## TypoScriptRenderingMiddleware
 
 ```sh
@@ -41,4 +89,3 @@ ext_localconf.php:
         });
     });
 ```
-
