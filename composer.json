@@ -2,7 +2,10 @@
     "name": "bnf/typo3-middleware",
     "description": "PSR-7/Slim compatible middleware for TYPO3",
     "keywords": [
-        "TYPO3"
+        "TYPO3",
+        "middleware",
+        "psr-7",
+        "http-message"
     ],
     "authors": [
         {
