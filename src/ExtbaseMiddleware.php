@@ -11,8 +11,6 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
 {
     protected $cleanup;
 
-    protected $backupSlots;
-
     protected $configuration = [
         'objects' => [
             \TYPO3\CMS\Extbase\Mvc\Web\Routing\UriBuilder::class => [
@@ -223,21 +221,26 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
     {
         \TYPO3\CMS\Core\Utility\ArrayUtility::mergeRecursiveWithOverrule($this->configuration, $configuration);
         $this->cleanup = $cleanup;
-        $this->backupSlots = null;
     }
 
     public function __invoke($request, $response, $next)
     {
         !isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
 
-        $this->disableIncompatibleSignalSlots();
+        $backupSlots = $this->disableIncompatibleSignalSlots();
         $this->initialize($this->configuration);
+
         /* HEADS UP! psr7Request is not an official property! */
         $this->configurationManager->psr7Request = $request;
 
         $response = $next($request, $response);
 
+        $this->resetSingletons();
+        $this->objectManager->get(\TYPO3\CMS\Extbase\Service\CacheService::class)->clearCachesOfRegisteredPageIds();
+
         if ($this->cleanup) {
+            unset($this->configurationManager->psr7Request);
+            $this->resetSlots($backupSlots);
             /* TODO: unset extbase environment? */
         }
 
@@ -258,12 +261,31 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
             $prop->setAccessible(true);
 
             $all = $prop->getValue($signalSlot);
-            $this->backupSlots = $all;
             $all[\TYPO3\CMS\Core\Resource\Index\MetaDataRepository::class]['recordPostRetrieval'] = array_filter($slots, function ($slot) {
                 return $slot['class'] !== \TYPO3\CMS\Frontend\Aspect\FileMetadataOverlayAspect::class;
             });
             $prop->setValue($signalSlot, $all);
         }
+
+        return $slots;
+    }
+
+    /**
+     * @param  array $backup
+     * @return void
+     */
+    protected function resetSlots($backup)
+    {
+        if (empty($backup)) {
+            return;
+        }
+
+        $prop = new \ReflectionProperty(get_class($signalSlot), 'slots');
+        $prop->setAccessible(true);
+
+        $all = $prop->getValue($signalSlot);
+        $all[\TYPO3\CMS\Core\Resource\Index\MetaDataRepository::class]['recordPostRetrieval'] = $backup;
+        $prop->setValue($signalSlot, $all);
     }
 
     /**
