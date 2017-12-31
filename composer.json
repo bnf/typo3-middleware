@@ -17,9 +17,9 @@
     "require": {
         "php": ">=7.0.0",
         "psr/http-message": "^1.0",
-        "typo3/cms-core": "^8.7",
-        "typo3/cms-frontend": "^8.7",
-        "typo3/cms-extbase": "^8.7"
+        "typo3/cms-core": "^8.7 || ~9.0.0",
+        "typo3/cms-frontend": "^8.7 || ~9.0.0",
+        "typo3/cms-extbase": "^8.7 || ~9.0.0"
     },
     "autoload": {
         "psr-4": {
