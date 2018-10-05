@@ -193,6 +193,7 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
                         ],
                     ],
                 ],
+                // TODO: only for v8
                 \TYPO3\CMS\SysNote\Domain\Model\SysNote::class => [
                     'mapping' => [
                         'tableName' => 'sys_note',
@@ -225,7 +226,8 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
 
     public function __invoke($request, $response, $next)
     {
-        !isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
+        //!isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
+        !isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadBaseTca();
 
         $backupSlots = $this->disableIncompatibleSignalSlots();
         $this->initialize($this->configuration);
@@ -254,6 +256,7 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
     {
         $signalSlot = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
         $slots = $signalSlot->getSlots(\TYPO3\CMS\Core\Resource\Index\MetaDataRepository::class, 'recordPostRetrieval');
+        $backup = $slots;
         $prop = null;
 
         if (!empty($slots)) {
@@ -265,9 +268,11 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
                 return $slot['class'] !== \TYPO3\CMS\Frontend\Aspect\FileMetadataOverlayAspect::class;
             });
             $prop->setValue($signalSlot, $all);
+            // return backup
+            return $slots;
         }
 
-        return $slots;
+        return [];
     }
 
     /**
@@ -276,16 +281,10 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
      */
     protected function resetSlots($backup)
     {
-        if (empty($backup)) {
-            return;
-        }
-
+        $signalSlot = \TYPO3\CMS\Core\Utility\GeneralUtility::makeInstance(\TYPO3\CMS\Extbase\SignalSlot\Dispatcher::class);
         $prop = new \ReflectionProperty(get_class($signalSlot), 'slots');
         $prop->setAccessible(true);
-
-        $all = $prop->getValue($signalSlot);
-        $all[\TYPO3\CMS\Core\Resource\Index\MetaDataRepository::class]['recordPostRetrieval'] = $backup;
-        $prop->setValue($signalSlot, $all);
+        $prop->setValue($signalSlot, $backup);
     }
 
     /**
@@ -296,8 +295,8 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
         $this->initializeObjectManager();
         $this->initializeConfiguration($configuration);
         $this->configureObjectManager();
-        $this->initializeCache();
-        $this->initializeReflection();
+        is_callable([$this, 'initializeCache']) && $this->initializeCache();
+        is_callable([$this, 'initializeReflection']) && $this->initializeReflection();
         $this->initializePersistence();
     }
 
