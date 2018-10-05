@@ -3,6 +3,8 @@ namespace Bnf\Typo3Middleware;
 
 use Psr\Http\Message\ResponseInterface;
 use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
 use TYPO3\CMS\Core\Core\Bootstrap;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
 use TYPO3\CMS\Frontend\Http\RequestHandler;
@@ -14,7 +16,7 @@ use TYPO3\CMS\Frontend\Page\CacheHashCalculator;
  * @author Benjamin Franzke <benjaminfranzke@gmail.com>
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
-class TypoScriptRenderingMiddleware
+class TypoScriptRenderingMiddleware implements MiddlewareInterface
 {
     /**
      * @param array
@@ -106,20 +108,12 @@ class TypoScriptRenderingMiddleware
         }
     }
 
-    /**
-     * @return void
-     */
-    public function __invoke(ServerRequestInterface $request, ResponseInterface $response = null, callable $next = null)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $nextHandler): ResponseInterface
     {
-        $response = $this->process($request);
-
-        return $next !== null ? $next($request, $response) : $response;
+        return $this->handle($request);
     }
 
-    /**
-     * @return void
-     */
-    public function process(ServerRequestInterface $request, $handler = null)
+    public function handle(ServerRequestInterface $request): ResponseInterface
     {
         $queryParams = [
             'id' => $this->configuration['page'],
@@ -148,10 +142,6 @@ class TypoScriptRenderingMiddleware
 
         $requestHandler = GeneralUtility::makeInstance(RequestHandler::class, Bootstrap::getInstance());
         $response = $requestHandler->handleRequest($request);
-
-        if ($handler !== null) {
-            return $handler->handle($request);
-        }
 
         return $response;
     }

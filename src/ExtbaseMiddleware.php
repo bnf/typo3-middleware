@@ -1,13 +1,18 @@
 <?php
 namespace Bnf\Typo3Middleware;
 
+use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\ServerRequestInterface;
+use Psr\Http\Server\MiddlewareInterface;
+use Psr\Http\Server\RequestHandlerInterface;
+
 /**
  * ExtbaseMiddleware
  *
  * @author Benjamin Franzke <bfr@qbus.de>
  * @license http://www.gnu.org/licenses/gpl.html GNU General Public License, version 3 or later
  */
-class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
+class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap implements MiddlewareInterface
 {
     protected $cleanup;
 
@@ -224,7 +229,7 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
         $this->cleanup = $cleanup;
     }
 
-    public function __invoke($request, $response, $next)
+    public function process(ServerRequestInterface $request, RequestHandlerInterface $nextHandler): ResponseInterface
     {
         //!isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadCachedTca();
         !isset($GLOBALS['TCA']) && \TYPO3\CMS\Core\Core\Bootstrap::getInstance()->loadBaseTca();
@@ -235,7 +240,7 @@ class ExtbaseMiddleware extends \TYPO3\CMS\Extbase\Core\Bootstrap
         /* HEADS UP! psr7Request is not an official property! */
         $this->configurationManager->psr7Request = $request;
 
-        $response = $next($request, $response);
+        $response = $nextHandler->handle($request);
 
         $this->resetSingletons();
         $this->objectManager->get(\TYPO3\CMS\Extbase\Service\CacheService::class)->clearCachesOfRegisteredPageIds();
