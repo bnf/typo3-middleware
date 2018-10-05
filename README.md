@@ -38,7 +38,7 @@ ext_localconf.php:
 		/* TypoScript is not evaluated (by design), you need to provide _all_
                  * required persistence configuration here. Include stuff here that you
                  * or your dependencies write into config.extbase.persistence */
-                //\Vendor\Whathever\Domain\Model\Whatever::class => [ 'mapping' => [ 'tableName' => 'custom_table' ] ],
+                // 'classes' => [ \Vendor\Whathever\Domain\Model\Whatever::class => [ 'mapping' => [ 'tableName' => 'custom_table' ] ] ],
             ],
             /* You can provide plugin context here (will be used in the mocked UriBuilder) */
             //'extensionName' => 'Whatever',
