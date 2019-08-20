@@ -1,6 +1,6 @@
 {
     "name": "bnf/typo3-middleware",
-    "description": "PSR-7/Slim compatible middleware for TYPO3",
+    "description": "PSR-7/PSR-15 compatible middleware for TYPO3",
     "keywords": [
         "TYPO3",
         "middleware",
